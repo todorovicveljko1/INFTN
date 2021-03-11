@@ -8,7 +8,7 @@ def getDistance2(tileA, tileB):
         return abs(tileA.y - tileB.y)/2
 
     if tileA.y == tileB.y
-        return 2* abs(tileA.x - tileB.y)
+        return 2*abs(tileA.x - tileB.y)
     
     distX = abs(tileA.x - tileB.x)
     distY = abs(tileA.y - tileB.y)
