@@ -7,7 +7,7 @@ _game = None
 _gameId = None
 _playerIndex = None
 _playerId = 540495
-url = 'http://localhost:8080'
+url = 'http://192.168.17.189:8080'
 
 def get(url):
   r = requests.get(url)
