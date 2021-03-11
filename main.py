@@ -2,8 +2,10 @@
 
 
 import requests
+from agent import Agent
+import time
 
-_game = None
+_agent = None
 _gameId = None
 _playerIndex = None
 _playerId = 540495
@@ -15,25 +17,37 @@ def get(url):
   return res
 
 def test_game(playerId):
-    global _game, _gameId, _playerIndex
+    global _agent, _gameId, _playerIndex
     res = get(url + '/train/makeGame?playerId=' + str(playerId))
-    print(res)
-    # _game = res['result']
-    # _gameId = _game['id']
-    # print("Game id: " + str(_gameId))
+    #print(res)
+    _agent = Agent(res)
+    _gameId = res.get('gameId')
+    print("Game id: " + str(_gameId))
     # _playerIndex = res['playerIndex']
     return res
 
 def join(_playerId, _gameId):
     pass
 
+def run():
+    global _agent, _playerIndex, _playerId, _gameId
+
+    action = _agent.nextAction()
+    # After we send an action - we wait for response
+    res = do_action(_playerId, _gameId, True, action[0], action[1])
+    # Other player made their move - we send our move again
+    #_agent.update(res)
+    print(res)
+    if res.get(message) == "Game is finished":
+        return;
+    run()
+  
+
 def do_action(playerId, gameId, test, action, queryDict):
-    queryStr = "?playerId=" + str(playerId) + "&gameId=" + str(gameId)
-    for key,value in queryDict:
-        queryStr += ("&" + str(key) + "=" + str(value))
-    
-
-
+    queryStr = url+"/train/"+action+"?playerId=" + str(playerId) + "&gameId=" + str(gameId)
+    for key in queryDict:
+        queryStr += ("&" + str(key) + "=" + str(queryDict[key]))
+    return get(queryStr)
 #print("Enter player ID:")
 #_playerId = input()
 print("Enter command:")
