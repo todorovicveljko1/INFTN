@@ -1,10 +1,22 @@
-
+ 
 ROWS = 27
 COLS = 9
 
+def getDistance2(tileA, tileB):
+    
+    if tileA.x == tileB.x and tileA.y % 2 == tileB.y %2:
+        return abs(tileA.y - tileB.y)/2
 
+    if tileA.y == tileB.y
+        return 2* abs(tileA.x - tileB.y)
+    
+    distX = abs(tileA.x - tileB.x)
+    distY = abs(tileA.y - tileB.y)
+    return distX + distY
 
 def getDistance(tileA, tileB):
+
+
     distX = abs(tileA.x - tileB.x)
     distY = abs(tileA.y - tileB.y)
     return distX + distY
@@ -57,17 +69,21 @@ class FloodFillTileInfo():
  
 
 class Tile:
-    def __init__(self, _row, _column, _ownedByTeam, _itemType, _numOfItems):
-        self.row = _row
-        self.column = _column
-        self.ownedByTeam = _ownedByTeam
-        self.itemType = _itemType
-        self.numOfItems = _numOfItems
+    def __init__(self, tileData):
+        self.row = tileData.get("row")
+        self.column = tileData.get("column")
+        self.ownedByTeam = tileData.get("ownedByTeam")
+        self.itemType =  tileData.get("tileContent").get("itemType")
+        self.numOfItems = tileData.get("tileContent").get("numOfItems")
 
         self.parent = None
         self.gCost = 0  # Distance to start node
         self.hCost = 0  # Distance to goal node
-    
+    def update(self, tileData):
+        self.ownedByTeam = tileData.get("ownedByTeam")
+        self.itemType =  tileData.get("tileContent").get("itemType")
+        self.numOfItems = tileData.get("tileContent").get("numOfItems")
+        
     @property
     def fCost(self):
         return self.gCost + self.hCost
@@ -94,11 +110,7 @@ class World:
         rows = map.get('tiles')
         self.tiles = [[
             Tile(
-                tile.get("row"),
-                tile.get("column"),
-                tile.get("ownedByTeam"),
-                tile.get("tileContent").get("itemType"),
-                tile.get("tileContent").get("numOfItems")
+                tile
             ) for tile in row 
         ] for row in rows]
         self.freeASpot = []
@@ -107,6 +119,9 @@ class World:
                 if tile.itemType == "FREE_A_SPOT":
                     self.freeASpot.append(tile)
         # TILES (27, 9)
+    def updateTiles(self, tileList):
+        for tile in tileList:
+            self.tiles[tile.get('row')][tile.get('column')].update(tile)
 
     def getNeighbors(self, position: (int, int)): # POSITION (Y, X)
         neighbors = list()
