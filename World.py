@@ -107,6 +107,7 @@ class World:
                 if tile.itemType == "FREE_A_SPOT":
                     self.freeASpot.append(tile)
         # TILES (27, 9)
+
     def getNeighbors(self, position: (int, int)): # POSITION (Y, X)
         neighbors = list()
         if position[1]%2 == 1:
@@ -141,7 +142,14 @@ class World:
     def getTile(self, position: (int, int)):
         return self.tiles[position[1]][position[0]]
 
-    def checkT
+    def checkNextFreeTile(self, position: (int, int)):
+        tile = self.getTile(position)
+        neigh = self.getNeighbors(position)
+
+        for t in neigh:
+            if t.walkable:
+                return getMoveAction(tile, t)
+    
     def AStar(self, startPos, endPos):
 
         start_tile = self.getTile(startPos)

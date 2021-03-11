@@ -33,12 +33,12 @@ def run():
     global _agent, _playerIndex, _playerId, _gameId
 
     action = _agent.nextAction()
+    print(action)
     # After we send an action - we wait for response
     res = do_action(_playerId, _gameId, True, action[0], action[1])
     # Other player made their move - we send our move again
-    #_agent.update(res)
-    print(res)
-    if res.get(message) == "Game is finished":
+    _agent.update(res)
+    if res.get('message') == "Game is finished" or res.get('finished'):
         return;
     run()
   
