@@ -2,7 +2,8 @@ from world import World, getMoveAction
 from BTree import select, FAILURE,  sequence, action, condition, not_, failer, actionWithProps, conditionWithProps
 
 class PlayerStats:
-    def __init__(self, playerData):
+    def __init__(self, playerData, key):
+        self.key = key
         self.x = playerData.get('x')
         self.y = playerData.get('y')
         self.score = playerData.get('score')
@@ -13,7 +14,16 @@ class PlayerStats:
         self.numOfSkipATurnUsed = playerData.get('numOfSkipATurnUsed')
         self.executedAction = playerData.get('executedAction')
         self.teamName = playerData.get('teamName')
-   
+    def update(self, playerData):
+        self.x = playerData.get('x')
+        self.y = playerData.get('y')
+        self.score = playerData.get('score')
+        self.gatheredKoalas = playerData.get('gatheredKoalas')
+        self.energy = playerData.get('energy')
+        self.hasFreeASpot = playerData.get('hasFreeASpot')
+        self.numberOfUsedFreeASpot = playerData.get('numberOfUsedFreeASpot')
+        self.numOfSkipATurnUsed = playerData.get('numOfSkipATurnUsed')
+        self.executedAction = playerData.get('executedAction')
     @property
     def position(self):
         return (self.y, self.x)
@@ -27,9 +37,9 @@ class Agent:
             if "player" in key and "Changed" not in key :
                 # print(gameJson.get(key))
                 if gameJson.get(key).get('teamName') != "INFTN":
-                    self.enemy = PlayerStats(gameJson.get(key))
+                    self.enemy = PlayerStats(gameJson.get(key), key)
                 else:
-                    self.me = PlayerStats(gameJson.get(key))
+                    self.me = PlayerStats(gameJson.get(key), key)
 
         self.decisionTreeModel =self.createDTreeModel()
         self.ACTION = None
@@ -57,16 +67,12 @@ class Agent:
         
 
     def update(self, gameJson):
-        self.world = World(gameJson.get("map"))
-        self.me = None
-        self.enemy = None
         for key in gameJson.keys():
-            if "player" in key and "Changed" not in key :
-                # print(gameJson.get(key))
-                if gameJson.get(key).get('teamName') != "INFTN":
-                    self.enemy = PlayerStats(gameJson.get(key))
-                else:
-                    self.me = PlayerStats(gameJson.get(key))
+            if "Changed" in key:
+                self.world.updateTiles(gameJson.get(key))
+        self.me.update(gameJson.get(self.me.key))
+        self.enemy.update(gameJson.get(self.enemy.key))
+        
 
 
     def nextAction(self):

@@ -7,8 +7,7 @@ f = open("./map.json","r")
 bot = Agent(json.load(f))
 f.close()
 
-print(bot.nextAction())
-print(bot.nextAction())
+print(bot.world.AStar((1,11),(6,15)))
 
 """
 path = w.AStar((0,0),(7,26))
