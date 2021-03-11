@@ -1,9 +1,12 @@
+# 540495
+
+
 import requests
 
 _game = None
 _gameId = None
 _playerIndex = None
-_playerId = None
+_playerId = 540495
 url = 'http://localhost:8080'
 
 def get(url):
@@ -11,12 +14,21 @@ def get(url):
   res = r.json()
   return res
 
-def test_game(_playerId):
-    
+def test_game(playerId):
+    global _game, _gameId, _playerIndex
+    res = get(url + '/train/makeGame?playerId=' + str(playerId))
+    print(res)
+    # _game = res['result']
+    # _gameId = _game['id']
+    # print("Game id: " + str(_gameId))
+    # _playerIndex = res['playerIndex']
+    return res
 
+def join(_playerId, _gameId):
+    pass
 
-print("Enter player ID:")
-_playerId = input()
+#print("Enter player ID:")
+#_playerId = input()
 print("Enter command:")
 command = input()
 if command == 'test':
