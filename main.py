@@ -7,7 +7,7 @@ _game = None
 _gameId = None
 _playerIndex = None
 _playerId = 540495
-url = 'http://192.168.17.189:8080'
+url = 'https://aibg2021.herokuapp.com'
 
 def get(url):
   r = requests.get(url)
@@ -26,6 +26,13 @@ def test_game(playerId):
 
 def join(_playerId, _gameId):
     pass
+
+def do_action(playerId, gameId, test, action, queryDict):
+    queryStr = "?playerId=" + str(playerId) + "&gameId=" + str(gameId)
+    for key,value in queryDict:
+        queryStr += ("&" + str(key) + "=" + str(value))
+    
+
 
 #print("Enter player ID:")
 #_playerId = input()
