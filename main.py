@@ -24,7 +24,6 @@ def test_game(playerId):
     _gameId = res.get('gameId')
     print("Game id: " + str(_gameId))
     # _playerIndex = res['playerIndex']
-    return res
 
 def join(_playerId, _gameId):
     pass
@@ -45,15 +44,16 @@ def run():
 
 def do_action(playerId, gameId, test, action, queryDict):
     queryStr = url+"/train/"+action+"?playerId=" + str(playerId) + "&gameId=" + str(gameId)
-    for key in queryDict:
-        queryStr += ("&" + str(key) + "=" + str(queryDict[key]))
+    if queryDict is not None:
+        for key in queryDict:
+            queryStr += ("&" + str(key) + "=" + str(queryDict[key]))
     return get(queryStr)
 #print("Enter player ID:")
 #_playerId = input()
 print("Enter command:")
 command = input()
 if command == 'test':
-  print(_playerId)
+  #print(_playerId)
   test_game(_playerId)
   run()
 elif command == 'join':

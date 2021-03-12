@@ -1,6 +1,18 @@
 from world import World, getMoveAction
 from BTree import select, FAILURE,  sequence, action, condition, not_, failer, actionWithProps, conditionWithProps
 
+def movesCompression(moves):
+    if moves is None: return None
+    out = [[moves[0], 1]]
+    for move in moves[1:]:
+        if out[len(out)-1][0] == move:
+            out[len(out)-1][1]+=1
+        else:
+            out.append([move,1])
+    return out
+
+
+
 class PlayerStats:
     def __init__(self, playerData, key):
         self.key = key
@@ -46,8 +58,18 @@ class Agent:
         
     def createDTreeModel(self):
         return select((
-            action(self.getClosestFreeASpot),
+            sequence((
+                condition(self.world.isThereFreeASpot),
+                action(self.getClosestFreeASpot),
+            )),
+            action(self.moveToNextFreeTile)
         ))
+
+
+    def moveToNextFreeTile(self):
+        direction = self.world.checkNextFreeTile(self.me.position)
+        self.ACTION = "move"
+        self.QUERY_DATA = {"direction": direction, "distance":1 }
 
     def getClosestFreeASpot(self):
         closestPath = None
@@ -62,14 +84,21 @@ class Agent:
                     minTile = tile
         if closestPath is None or len(closestPath) < 2: 
             return FAILURE
+        moves = []
+        prev = closestPath[0]
+        for tile in closestPath[1:]:
+            moves.append(getMoveAction(prev, tile))    
+            prev = tile
+        
+        moves = movesCompression(moves)
+        direction =  moves[0][0]
+        distance = moves[0][1] if self.me.energy >= moves[0][1] else self.me.energy
         self.ACTION = "move"
-        self.QUERY_DATA = {"direction": getMoveAction(closestPath[0], closestPath[1]), "distance":"1" }
+        self.QUERY_DATA = {"direction": direction, "distance":distance }
         
 
     def update(self, gameJson):
-        for key in gameJson.keys():
-            if "Changed" in key:
-                self.world.updateTiles(gameJson.get(key))
+        self.world.update(gameJson.get("map"))
         self.me.update(gameJson.get(self.me.key))
         self.enemy.update(gameJson.get(self.enemy.key))
         
@@ -77,5 +106,5 @@ class Agent:
 
     def nextAction(self):
         self.decisionTreeModel.blackboard().tick()
-        return (self.ACTION,self.QUERY_DATA)
+        return (self.ACTION, self.QUERY_DATA)
     

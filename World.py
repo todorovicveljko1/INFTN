@@ -7,7 +7,7 @@ def getDistance2(tileA, tileB):
     if tileA.x == tileB.x and tileA.y % 2 == tileB.y %2:
         return abs(tileA.y - tileB.y)/2
 
-    if tileA.y == tileB.y
+    if tileA.y == tileB.y:
         return 2*abs(tileA.x - tileB.y)
     
     distX = abs(tileA.x - tileB.x)
@@ -119,9 +119,21 @@ class World:
                 if tile.itemType == "FREE_A_SPOT":
                     self.freeASpot.append(tile)
         # TILES (27, 9)
-    def updateTiles(self, tileList):
-        for tile in tileList:
-            self.tiles[tile.get('row')][tile.get('column')].update(tile)
+    def update(self, map):
+        rows = map.get('tiles')
+        self.tiles = [[
+            Tile(
+                tile
+            ) for tile in row 
+        ] for row in rows]
+        self.freeASpot = []
+        for row in self.tiles:
+            for tile in row:
+                if tile.itemType == "FREE_A_SPOT":
+                    self.freeASpot.append(tile)
+
+    def isThereFreeASpot(self):
+        return len(self.freeASpot) > 0
 
     def getNeighbors(self, position: (int, int)): # POSITION (Y, X)
         neighbors = list()
