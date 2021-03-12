@@ -60,7 +60,7 @@ class Agent:
     def createDTreeModel(self):
         return select((
             sequence((
-                condition(self.canSteal),
+                condition(self.canStealMore), # canSteal
                 action(self.steal),
             )),
             sequence((
@@ -110,6 +110,8 @@ class Agent:
         self.QUERY_DATA = None
 
     def update(self, gameJson):
+        if gameJson == None:
+            return
         self.world.update(gameJson.get("map"))
         self.me.update(gameJson.get(self.me.key))
         self.enemy.update(gameJson.get(self.enemy.key))
@@ -121,7 +123,10 @@ class Agent:
         return (self.ACTION, self.QUERY_DATA)
     
     def canSteal(self):
-        return self.me.energy >= 5 and self.enemy.energy < 5 and self.isNeighbor(self.enemy.position)
+        return self.me.energy >= 5 and self.enemy.energy < 5 and self.isNeighbor(self.enemy.position) 
+
+    def canStealMore(self):
+        return (self.me.energy - self.enemy.energy) > 5 and self.isNeighbor(self.enemy.position) and self.enemy.gatheredKoalas > 1
 
     def isNeighbor(self, position):
         neigh = self.world.getNeighbors(self.me.position)
