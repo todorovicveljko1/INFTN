@@ -19,6 +19,7 @@ def shouldSkip(self):
     flag = False
 
     if len(neighbors) == 1:
+        
         neighofneigh = self.world.getNeighbors(neighbors[0].position)
         if len(neighofneigh) == 1:
             flag = True

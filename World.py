@@ -140,6 +140,7 @@ class World:
                     self.freeASpot.append(tile)
                 elif tile.itemType == "KOALA_CREW":
                     self.koalaCrew.append(tile)
+        self.freeSpots = map.get('numberOfFreeSpots')
         
     def isThereFreeASpot(self):
         return len(self.freeASpot) > 0
@@ -260,7 +261,37 @@ class World:
         if bestTileExposure == -1:
             return None
         return getMoveAction(center, bestTileForMove)
+    def checkNextFreeTilePriority2(self, position: (int, int)):
+        center = self.getTile(position)
+        neighbors = self.getNeighbors(position)
+        bestTileForMove = None
+        bestTileExposure = -1
+        prevItemType = center.itemType
+        tileWalkable = []
+        center.itemType = "HOLE"
+        for tile in neighbors:
+            if tile.walkable:
+                tileWalkable.append(tile)
+                neighborsSub = self.getNeighbors(tile.position)
+                prevItemTypeSub = tile.itemType
+                tile.itemType = "HOLE"
+                for tileSub in neighborsSub:
+                    if tileSub.walkable:
+                        temp = self.floodFill(tileSub.position, accessTileCount = True)
+                    
+                        if temp > bestTileExposure:
+                            bestTileExposure = temp
+                            bestTileForMove = tile
+                tile.itemType = prevItemTypeSub
+                
+        center.itemType = prevItemType
+        
+        if len(tileWalkable) == 1:
+            return getMoveAction(center, tileWalkable[0])
+        if bestTileExposure == -1:
+            return None
 
+        return getMoveAction(center, bestTileForMove)
                
     """
     def floodFillFindTiles(self, position, tilesPos, findCount=-1, depth=-1):

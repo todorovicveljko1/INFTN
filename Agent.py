@@ -66,7 +66,7 @@ class Agent:
             )),
             sequence((
                 condition(self.world.isThereFreeASpot),
-                actionWithProps(self.getClosestTiles, self.world.freeASpot),
+                actionWithProps(self.getClosestTiles, self.world.freeASpot, False),
             )),
             sequence((
                 condition(self.isTurnGreaterThen40),
@@ -78,8 +78,13 @@ class Agent:
                 condition(self.shouldSkip), #shouldSkip
                 action(self.skipAction),
             )),
-            action(self.moveToNextFreeTilePriority)
+            action(self.moveToNextFreeTilePriority2)
         ))
+
+    def moveToNextFreeTilePriority2(self):
+        direction = self.world.checkNextFreeTilePriority2(self.me.position)
+        self.ACTION = "move"
+        self.QUERY_DATA = {"direction": direction, "distance":1 }
 
     def moveToNextFreeTilePriority(self):
         direction = self.world.checkNextFreeTilePriority(self.me.position)
@@ -167,23 +172,39 @@ class Agent:
     def last20Turns(self):
         return self.world.freeSpots <= 20
 
-    def shouldSkip(self):
+    def shouldSkip(self): 
         neighbors = self.world.getNeighbors(self.me.position)
         flag = False
-
-        if len(neighbors) == 1:
-            neighofneigh = self.world.getNeighbors(neighbors[0].position)
-            if len(neighofneigh) == 1:
+        countWalkable = 0
+        countWalkable1 = 0
+        walkableNeighbors = []
+        for n in neighbors:
+            if n.walkable:
+                walkableNeighbors.append(n)  
+        if len(walkableNeighbors) == 1:
+            neighofneigh = self.world.getNeighbors(walkableNeighbors[0].position)
+            for n in neighofneigh:
+                if n.walkable:
+                    countWalkable += 1  
+            if countWalkable == 0:
                 flag = True
 
-        elif len(neighbors) == 2:
-            neighofneigh1 = self.world.getNeighbors(neighbors[0].position)
-            neighofneigh2 = self.world.getNeighbors(neighbors[0].position)
-            if len(neighofneigh1) == 1 and len(neighofneigh1) == 1:
+        elif len(walkableNeighbors) == 2:
+            countWalkable = 0
+            countWalkable1 = 0
+            neighofneigh1 = self.world.getNeighbors(walkableNeighbors[0].position)
+            for n in neighofneigh1:
+                if n.walkable:
+                    countWalkable += 1 
+            neighofneigh2 = self.world.getNeighbors(walkableNeighbors[1].position)
+            for n in neighofneigh2:
+                if n.walkable:
+                    countWalkable1 += 1 
+            if countWalkable == 0 and countWalkable1 == 0:
                 flag = True
 
-        if self.me.numOfSkipATurnUsed < 2:
-            if flag == True  and len(self.world.koalaCrew)== 0:
+        if self.me.numOfSkipATurnUsed < 3:
+            if flag == True  and len(self.world.koalaCrew) == 0:
                 return True
         
         return False
