@@ -114,10 +114,16 @@ class World:
             ) for tile in row 
         ] for row in rows]
         self.freeASpot = []
+        self.koalaCrew = []
         for row in self.tiles:
             for tile in row:
                 if tile.itemType == "FREE_A_SPOT":
                     self.freeASpot.append(tile)
+                elif tile.itemType == "KOALA_CREW":
+                    self.koalaCrew.append(tile)
+        
+        self.freeSpots = map.get('numberOfFreeSpots')
+
         # TILES (27, 9)
     def update(self, map):
         rows = map.get('tiles')
@@ -127,14 +133,18 @@ class World:
             ) for tile in row 
         ] for row in rows]
         self.freeASpot = []
+        self.koalaCrew = []
         for row in self.tiles:
             for tile in row:
                 if tile.itemType == "FREE_A_SPOT":
                     self.freeASpot.append(tile)
-
+                elif tile.itemType == "KOALA_CREW":
+                    self.koalaCrew.append(tile)
+        
     def isThereFreeASpot(self):
         return len(self.freeASpot) > 0
-
+    def isTurnKoalaCrew(self):
+        return len(self.koalaCrew) > 0
     def getNeighbors(self, position: (int, int)): # POSITION (Y, X)
         neighbors = list()
         if position[1]%2 == 1:

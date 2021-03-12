@@ -43,12 +43,13 @@ class PlayerStats:
 class Agent:
     def __init__(self, gameJson):
         self.world = World(gameJson.get("map"))
+        self.numOfMove = 0
         self.me = None
         self.enemy = None
         for key in gameJson.keys():
             if "player" in key and "Changed" not in key :
                 # print(gameJson.get(key))
-                if gameJson.get(key).get('teamName') != "INFTN":
+                if gameJson.get(key).get('teamName') != "INFTN" or self.me is not None:
                     self.enemy = PlayerStats(gameJson.get(key), key)
                 else:
                     self.me = PlayerStats(gameJson.get(key), key)
@@ -65,7 +66,17 @@ class Agent:
             )),
             sequence((
                 condition(self.world.isThereFreeASpot),
-                action(self.getClosestFreeASpot),
+                actionWithProps(self.getClosestTiles, self.world.freeASpot),
+            )),
+            sequence((
+                condition(self.isTurnGreaterThen40),
+                condition(self.world.isTurnKoalaCrew),
+                actionWithProps(self.getClosestTiles, self.world.koalaCrew, False),
+            )),
+            sequence((
+                condition(self.last20Turns), 
+                condition(self.shouldSkip), #shouldSkip
+                action(self.skipAction),
             )),
             action(self.moveToNextFreeTilePriority)
         ))
@@ -80,17 +91,19 @@ class Agent:
         self.ACTION = "move"
         self.QUERY_DATA = {"direction": direction, "distance":1 }
 
-    def getClosestFreeASpot(self):
+    def getClosestTiles(self, tiles, useJumps = True):
         closestPath = None
         minDist = 100
         minTile = None
-        for tile in self.world.freeASpot:
+        for tile in tiles:
             path = self.world.AStar(self.me.position, tile.position)
             if path is not None:
                 if minDist > len(path):
                     minDist = len(path)
                     closestPath = path
                     minTile = tile
+        #print(closestPath)
+        #print(self.me.position)
         if closestPath is None or len(closestPath) < 2: 
             return FAILURE
         moves = []
@@ -98,13 +111,26 @@ class Agent:
         for tile in closestPath[1:]:
             moves.append(getMoveAction(prev, tile))    
             prev = tile
-        
-        moves = movesCompression(moves)
-        direction =  moves[0][0]
-        distance = moves[0][1] if self.me.energy >= moves[0][1] else self.me.energy
-        self.ACTION = "move"
-        self.QUERY_DATA = {"direction": direction, "distance":distance }
-        
+        if useJumps:
+            moves = movesCompression(moves)
+            direction =  moves[0][0]
+            distance = moves[0][1] if self.me.energy >= moves[0][1] else self.me.energy
+            self.ACTION = "move"
+            self.QUERY_DATA = {"direction": direction, "distance":distance }
+        else:
+            self.ACTION = "move"
+            self.QUERY_DATA = {"direction": moves[0][0], "distance":1 }
+
+
+    def getClosestFreeASpot(self):
+        self.getClosestTiles(self.world.freeASpot)
+    #koalaCrew
+    def getClosestKoalaCrew(self):
+        self.getClosestTiles(self.world.koalaCrew)
+
+    def isTurnGreaterThen40(self):
+        return self.numOfMove >= 40
+
     def steal(self):
         self.ACTION = "stealKoalas"
         self.QUERY_DATA = None
@@ -112,6 +138,7 @@ class Agent:
     def update(self, gameJson):
         if gameJson == None:
             return
+        self.numOfMove = gameJson.get("numOfMove")
         self.world.update(gameJson.get("map"))
         self.me.update(gameJson.get(self.me.key))
         self.enemy.update(gameJson.get(self.enemy.key))
@@ -121,13 +148,12 @@ class Agent:
     def nextAction(self):
         self.decisionTreeModel.blackboard().tick()
         return (self.ACTION, self.QUERY_DATA)
-    
+    """ OLD
     def canSteal(self):
         return self.me.energy >= 5 and self.enemy.energy < 5 and self.isNeighbor(self.enemy.position) 
-
+    """
     def canStealMore(self):
-        return (self.me.energy - self.enemy.energy) > 5 and self.isNeighbor(self.enemy.position) and self.enemy.gatheredKoalas > 1
-
+        return (self.me.energy - self.enemy.energy) >= 5 and self.isNeighbor(self.enemy.position) and self.enemy.gatheredKoalas > 1
     def isNeighbor(self, position):
         neigh = self.world.getNeighbors(self.me.position)
         enemyTile = self.world.getTile(position)
@@ -137,3 +163,31 @@ class Agent:
             flag = True
 
         return flag
+    
+    def last20Turns(self):
+        return self.world.freeSpots <= 20
+
+    def shouldSkip(self):
+        neighbors = self.world.getNeighbors(self.me.position)
+        flag = False
+
+        if len(neighbors) == 1:
+            neighofneigh = self.world.getNeighbors(neighbors[0].position)
+            if len(neighofneigh) == 1:
+                flag = True
+
+        elif len(neighbors) == 2:
+            neighofneigh1 = self.world.getNeighbors(neighbors[0].position)
+            neighofneigh2 = self.world.getNeighbors(neighbors[0].position)
+            if len(neighofneigh1) == 1 and len(neighofneigh1) == 1:
+                flag = True
+
+        if self.me.numOfSkipATurnUsed < 2:
+            if flag == True  and len(self.world.koalaCrew)== 0:
+                return True
+        
+        return False
+
+    def skipAction(self):
+        self.ACTION = "skipATurn"
+        self.QUERY_DATA = None

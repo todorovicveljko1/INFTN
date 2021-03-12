@@ -7,7 +7,7 @@ import time
 
 _agent = None
 _gameId = None
-_playerIndex = None
+_testing = False
 _playerId = 540495
 url = 'https://aibg2021.herokuapp.com'
 
@@ -17,24 +17,28 @@ def get(url):
   return res
 
 def test_game(playerId):
-    global _agent, _gameId, _playerIndex
+    global _agent, _gameId
     res = get(url + '/train/makeGame?playerId=' + str(playerId))
     #print(res)
     _agent = Agent(res)
     _gameId = res.get('gameId')
     print("Game id: " + str(_gameId))
-    # _playerIndex = res['playerIndex']
 
-def join(_playerId, _gameId):
-    pass
+def join(_playerId):
+    global _agent, _gameId
+    res = get(url + '/train/makeGame?playerId=' + str(playerId))
+    #print(res)
+    _agent = Agent(res)
+    _gameId = res.get('gameId')
+    print("Game id: " + str(_gameId))
 
 def run():
-    global _agent, _playerIndex, _playerId, _gameId
+    global _agent, _playerId, _gameId
 
     action = _agent.nextAction()
     print(action)
     # After we send an action - we wait for response
-    res = do_action(_playerId, _gameId, True, action[0], action[1])
+    res = do_action(_playerId, _gameId, action[0], action[1])
     # Other player made their move - we send our move again
     _agent.update(res)
     if res.get('message') == "Game is finished" or res.get('finished'):
@@ -42,8 +46,11 @@ def run():
     run()
   
 
-def do_action(playerId, gameId, test, action, queryDict):
-    queryStr = url+"/train/"+action+"?playerId=" + str(playerId) + "&gameId=" + str(gameId)
+def do_action(playerId, gameId, action, queryDict):
+    if _testing:
+        queryStr = url+"/train/"+action+"?playerId=" + str(playerId) + "&gameId=" + str(gameId)
+    else:
+        queryStr = url+"/"+action+"?playerId=" + str(playerId) + "&gameId=" + str(gameId)
     if queryDict is not None:
         for key in queryDict:
             queryStr += ("&" + str(key) + "=" + str(queryDict[key]))
@@ -54,10 +61,11 @@ print("Enter command:")
 command = input()
 if command == 'test':
   #print(_playerId)
+  _testing = True
   test_game(_playerId)
   run()
 elif command == 'join':
   print("Enter game id:")
   _gameId = input()
-  join(_playerId, _gameId)
+  join(_playerId)
   run()
