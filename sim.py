@@ -6,7 +6,11 @@ import json
 f = open("./map.json","r")
 bot = Agent(json.load(f))
 f.close()
-mat = bot.moveToNextFreeTilePriority()
+bot.world.getTile((6,2)).itemType = "HOLE"
+bot.world.getTile((7,3)).itemType = "HOLE"
+bot.world.getTile((7,4)).itemType = "HOLE"
+bot.world.getTile((8,5)).itemType = "HOLE"
+mat = bot.world.checkNextFreeTilePriority2((8,4))
 print(mat)
 #for i in range(len(mat)):
 #    for j in range(len(mat[i])):

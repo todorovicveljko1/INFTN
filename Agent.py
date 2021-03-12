@@ -65,8 +65,9 @@ class Agent:
                 action(self.steal),
             )),
             sequence((
-                condition(self.world.isThereFreeASpot),
-                actionWithProps(self.getClosestTiles, self.world.freeASpot, False),
+                conditionWithProps(self.lastThanTurns, 30), 
+                condition(self.shouldNotMove),
+                action(self.noMoveAction),
             )),
             sequence((
                 condition(self.isTurnGreaterThen40),
@@ -74,13 +75,16 @@ class Agent:
                 actionWithProps(self.getClosestTiles, self.world.koalaCrew, False),
             )),
             sequence((
-                condition(self.last20Turns), 
+                condition(self.world.isThereFreeASpot),
+                actionWithProps(self.getClosestTiles, self.world.freeASpot, False),
+            )),
+            sequence((
+                conditionWithProps(self.lastThanTurns, 12), 
                 condition(self.shouldSkip), #shouldSkip
                 action(self.skipAction),
             )),
             action(self.moveToNextFreeTilePriority2)
         ))
-
     def moveToNextFreeTilePriority2(self):
         direction = self.world.checkNextFreeTilePriority2(self.me.position)
         self.ACTION = "move"
@@ -158,7 +162,7 @@ class Agent:
         return self.me.energy >= 5 and self.enemy.energy < 5 and self.isNeighbor(self.enemy.position) 
     """
     def canStealMore(self):
-        return (self.me.energy - self.enemy.energy) >= 5 and self.isNeighbor(self.enemy.position) and self.enemy.gatheredKoalas > 1
+        return (self.me.energy - self.enemy.energy) >= 1 and self.isNeighbor(self.enemy.position) and self.enemy.gatheredKoalas > 1
     def isNeighbor(self, position):
         neigh = self.world.getNeighbors(self.me.position)
         enemyTile = self.world.getTile(position)
@@ -169,8 +173,8 @@ class Agent:
 
         return flag
     
-    def last20Turns(self):
-        return self.world.freeSpots <= 20
+    def lastThanTurns(self, turns):
+        return self.world.freeSpots <= turns
 
     def shouldSkip(self): 
         neighbors = self.world.getNeighbors(self.me.position)
@@ -203,7 +207,7 @@ class Agent:
             if countWalkable == 0 and countWalkable1 == 0:
                 flag = True
 
-        if self.me.numOfSkipATurnUsed < 3:
+        if self.me.numOfSkipATurnUsed < 5 and (self.me.energy < self.enemy.energy or self.me.score > self.enemy.score): 
             if flag == True  and len(self.world.koalaCrew) == 0:
                 return True
         
@@ -212,3 +216,45 @@ class Agent:
     def skipAction(self):
         self.ACTION = "skipATurn"
         self.QUERY_DATA = None
+
+    def shouldNotMove(self):
+        neighbors = self.world.getNeighbors(self.me.position)
+        flag = False
+        countWalkable = 0
+        countWalkable1 = 0
+        walkableNeighbors = []
+        for n in neighbors:
+            if n.walkable:
+                walkableNeighbors.append(n)  
+        if len(walkableNeighbors) == 1:
+            neighofneigh = self.world.getNeighbors(walkableNeighbors[0].position)
+            for n in neighofneigh:
+                if n.walkable:
+                    countWalkable += 1  
+            if countWalkable == 0:
+                flag = True
+
+        elif len(walkableNeighbors) == 2:
+            countWalkable = 0
+            countWalkable1 = 0
+            neighofneigh1 = self.world.getNeighbors(walkableNeighbors[0].position)
+            for n in neighofneigh1:
+                if n.walkable:
+                    countWalkable += 1 
+            neighofneigh2 = self.world.getNeighbors(walkableNeighbors[1].position)
+            for n in neighofneigh2:
+                if n.walkable:
+                    countWalkable1 += 1 
+            if countWalkable == 0 and countWalkable1 == 0:
+                flag = True
+        
+        if self.me.energy*100 + self.me.score > self.enemy.score + self.enemy.energy*100:
+            return flag
+        return False
+    def noMoveAction(self):
+        if self.me.numOfSkipATurnUsed < 5:
+            self.ACTION = "skipATurn"
+            self.QUERY_DATA = None
+        else:
+            self.ACTION = "move"
+            self.QUERY_DATA = {"direction": None, "distance":1 }

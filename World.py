@@ -266,8 +266,8 @@ class World:
         neighbors = self.getNeighbors(position)
         bestTileForMove = None
         bestTileExposure = -1
-        prevItemType = center.itemType
         tileWalkable = []
+        prevItemType = center.itemType
         center.itemType = "HOLE"
         for tile in neighbors:
             if tile.walkable:
@@ -285,14 +285,17 @@ class World:
                 tile.itemType = prevItemTypeSub
                 
         center.itemType = prevItemType
-        
-        if len(tileWalkable) == 1:
+        if len(tileWalkable) == 1 or (len(tileWalkable)==2 and bestTileExposure == -1):
             return getMoveAction(center, tileWalkable[0])
         if bestTileExposure == -1:
             return None
 
         return getMoveAction(center, bestTileForMove)
-               
+
+
+    
+
+
     """
     def floodFillFindTiles(self, position, tilesPos, findCount=-1, depth=-1):
         if len(tilesPos) == 0:
