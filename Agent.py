@@ -60,13 +60,13 @@ class Agent:
     def createDTreeModel(self):
         return select((
             sequence((
+                condition(self.canSteal),
+                action(self.steal),
+            )),
+            sequence((
                 condition(self.world.isThereFreeASpot),
                 action(self.getClosestFreeASpot),
             )),
-            #sequence((
-            #    condition(self.canSteal),
-            #    action(self.steal)
-            #))
             action(self.moveToNextFreeTilePriority)
         ))
 
@@ -106,7 +106,8 @@ class Agent:
         self.QUERY_DATA = {"direction": direction, "distance":distance }
         
     def steal(self):
-        pass
+        self.ACTION = "stealKoalas"
+        self.QUERY_DATA = None
 
     def update(self, gameJson):
         self.world.update(gameJson.get("map"))
@@ -120,15 +121,14 @@ class Agent:
         return (self.ACTION, self.QUERY_DATA)
     
     def canSteal(self):
-        
-        return self.me.energy >5 and self.enemy.energy<5 and self.isNeighbor(self.enemy.position)
+        return self.me.energy >= 5 and self.enemy.energy < 5 and self.isNeighbor(self.enemy.position)
 
     def isNeighbor(self, position):
         neigh = self.world.getNeighbors(self.me.position)
-
+        enemyTile = self.world.getTile(position)
         flag = False
 
-        if position in neigh:
+        if enemyTile in neigh:
             flag = True
 
         return flag
