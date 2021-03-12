@@ -6,8 +6,15 @@ import json
 f = open("./map.json","r")
 bot = Agent(json.load(f))
 f.close()
+mat = bot.moveToNextFreeTilePriority()
+print(mat)
+#for i in range(len(mat)):
+#    for j in range(len(mat[i])):
+#        if i%2 == 1 and j == 0:
+ #           print("   ",end="")
+ #       print("{:4}".format(mat[i][j]), end="  ")
+ #   print()
 
-print(bot.world.checkNextFreeTile((6,15)))
 
 
 
@@ -18,6 +25,17 @@ print(bot.world.checkNextFreeTile((6,15)))
 #    print(getMoveAction(prev,p), end="->")
  #   prev = p
 """
+
+for i in range(len(mat)):
+    for j in range(len(mat[i])):
+        if i%2 == 1 and j == 0:
+            print("   ",end="")
+        print("{:4}".format(mat[i][j]), end="  ")
+    print()
+
+
+
+
 path = w.AStar((0,0),(7,26))
 prev = path[0]
 

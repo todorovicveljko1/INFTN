@@ -212,6 +212,46 @@ class World:
                         open_list.add(neigbor)
         return None
 
+    def floodFill(self, position, depth=-1, accessTileCount = False):
+        if depth == -1:
+            depth = 100
+        queue = set()
+        mat = [[-1 for i in range(10)] for j in range(28)]
+        mat[position[1]][position[0]] = 0
+        count = 0
+        queue.add(self.getTile(position))
+        while len(queue) > 0:
+            current_tile = queue.pop()
+            for neigbor in self.getNeighbors(current_tile.position):
+                if (mat[neigbor.x][neigbor.y] == -1 or mat[neigbor.x][neigbor.y] > mat[current_tile.x][current_tile.y] + 1) and neigbor.walkable:
+                    mat[neigbor.x][neigbor.y] = mat[current_tile.x][current_tile.y] + 1
+                    count+=1
+                    if mat[neigbor.x][neigbor.y] == depth:
+                        continue
+                    queue.add(neigbor)
+        if accessTileCount:
+            return count
+        return mat
+
+    def checkNextFreeTilePriority(self, position: (int, int)):
+        center = self.getTile(position)
+        neighbors = self.getNeighbors(position)
+        bestTileForMove = None
+        bestTileExposure = -1
+        prevItemType = center.itemType
+        center.itemType = "HOLE"
+        for tile in neighbors:
+            if tile.walkable:
+                temp = self.floodFill(tile.position, accessTileCount = True)
+                if temp > bestTileExposure:
+                    bestTileExposure = temp
+                    bestTileForMove = tile
+        center.itemType = prevItemType
+        if bestTileExposure == -1:
+            return None
+        return getMoveAction(center, bestTileForMove)
+
+               
     """
     def floodFillFindTiles(self, position, tilesPos, findCount=-1, depth=-1):
         if len(tilesPos) == 0:

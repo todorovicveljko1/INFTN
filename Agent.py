@@ -55,16 +55,25 @@ class Agent:
 
         self.decisionTreeModel =self.createDTreeModel()
         self.ACTION = None
-        
+        self.QUERY_DATA = None
+
     def createDTreeModel(self):
         return select((
             sequence((
                 condition(self.world.isThereFreeASpot),
                 action(self.getClosestFreeASpot),
             )),
-            action(self.moveToNextFreeTile)
+            #sequence((
+            #    condition(self.canSteal),
+            #    action(self.steal)
+            #))
+            action(self.moveToNextFreeTilePriority)
         ))
 
+    def moveToNextFreeTilePriority(self):
+        direction = self.world.checkNextFreeTilePriority(self.me.position)
+        self.ACTION = "move"
+        self.QUERY_DATA = {"direction": direction, "distance":1 }
 
     def moveToNextFreeTile(self):
         direction = self.world.checkNextFreeTile(self.me.position)
@@ -96,6 +105,8 @@ class Agent:
         self.ACTION = "move"
         self.QUERY_DATA = {"direction": direction, "distance":distance }
         
+    def steal(self):
+        pass
 
     def update(self, gameJson):
         self.world.update(gameJson.get("map"))
@@ -108,3 +119,16 @@ class Agent:
         self.decisionTreeModel.blackboard().tick()
         return (self.ACTION, self.QUERY_DATA)
     
+    def canSteal(self):
+        
+        return self.me.energy >5 and self.enemy.energy<5 and self.isNeighbor(self.enemy.position)
+
+    def isNeighbor(self, position):
+        neigh = self.world.getNeighbors(self.me.position)
+
+        flag = False
+
+        if position in neigh:
+            flag = True
+
+        return flag
